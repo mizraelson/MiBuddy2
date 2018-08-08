@@ -29,7 +29,8 @@ def report(minimal_overseq,downsample):
 
     report=basicstats.loc[:,met_cols]
     if minimal_overseq is None:
-        report=report.merge(estimates[estim_col_merge+['OVERSEQ_THRESHOLD']], left_on="sample_id", right_on="#SAMPLE_ID",how="outer").drop(['#SAMPLE_ID'], axis=1)
+        report=report.merge(estimates[estim_col_merge+['OVERSEQ_THRESHOLD']], left_on="sample_id", right_on="#SAMPLE_ID",\
+                            how="outer").drop(['#SAMPLE_ID'], axis=1)
     else:
         report=report.merge(estimates[estim_col_merge], left_on="sample_id", right_on="#SAMPLE_ID",how="outer").drop(['#SAMPLE_ID'], axis=1)
         report["OVERSEQ_THRESHOLD"] = minimal_overseq
@@ -49,18 +50,17 @@ def report(minimal_overseq,downsample):
     report.to_csv("report_simple.txt", sep='\t', index=False, na_rep="NA")
 
     report.rename(columns=rename_columns, inplace=True)
-    report_concat = pd.concat({'Metadata': report[met_cols],'Basic_Statistics': report[list(rename_columns.values())[1]],\
+    report_concat = pd.concat({'Metadata': report[met_cols],'Basic_Statistics': report[list(rename_columns.values()),\
                     'CDR3_AA_physical_properties':report[CdrAAprofile_cols],\
-                    'Diversity_statistics':report[["Downsample_UMI"]+divers_cols]}, axis=1)
-    columns=["Metadata",'Basic_Statistics',"CDR3_AA_physical_properties","Diversity_statistics"]
-    report_concat=report_concat.reindex(columns=columns, level=0)
-    report_concat.index += 1 
+                    'Diversity_statistics':report[["Downsample_UMI"]+divers_cols]}, axis=1).reindex(columns=["Metadata",'Basic_Statistics',"CDR3_AA_physical_properties","Diversity_statistics"], level=0)
+    report_concat.index += 1
 
     report_concat.to_excel("report.xls",header=True, na_rep="NA", merge_cells=True)
     
     
 
 #Returns downsample UMI value
+
 def downsample_threshold(basicstats_df):
     a=basicstats_df["count"].quantile(q=0.2)/2
     if basicstats_df["count"].min()>a:
@@ -146,27 +146,31 @@ def migec_assemble(file_R1, file_R2, overseq, output_dir):
     assemble.wait()
 
 
-def mixcr(species, file_R1, file_R2):
+def mixcr_align(species, file_R1, file_R2):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0])
     FNULL = open(os.devnull, 'w')
-#    mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
-#                                        file_R1, file_R2,
-#                                        'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
-#                                            0] + '.vdjca'],
-#                                       stdout=FNULL, stderr=FNULL)
-#    mixcr_alignment.wait()
-#    print("Starting MiXCR assemble for " + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0])
-#
-#    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
-#                                       os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0] + '.vdjca',
-#                                       'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
-#                                           0] + '.clns'],
-#                                      stdout=FNULL, stderr=FNULL)
-#    mixcr_assemble.wait()
-    print("Exporting clones for " + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0])
+    mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
+                                       file_R1, file_R2,
+                                       'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
+                                           0] + '.vdjca'],
+                                      stdout=FNULL, stderr=FNULL)
+    mixcr_alignment.wait()
+
+def mixcr_assemble(vdjca_file):
+    FNULL = open(os.devnull, 'w')
+    print("Starting MiXCR assemble for " + vdjca_file)
+    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
+                                      vdjca_file + '.vdjca',
+                                      'mixcr/' + vdjca_file + '.clns'],
+                                     stdout=FNULL, stderr=FNULL)
+    mixcr_assemble.wait()
+
+def mixcr_export(clns_file):
+    FNULL = open(os.devnull, 'w')
+    print("Exporting clones for " + clns_file)
     mixcr_export = subprocess.Popen(
-        ['mixcr', 'exportClones','-o','mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0] + '.clns',
-         'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0] + '.txt'],
+        ['mixcr', 'exportClones','-o','--filter-stops','-f','mixcr/' + clns_file + '.clns',
+         'mixcr/' + clns_file + '.txt'],
         stdout=FNULL, stderr=FNULL)
     mixcr_export.wait()
 
@@ -188,7 +192,7 @@ def vdjtools_CalcBasicStats():
 def vdjtools_CalcCdrAAProfile():
     print("Calculating CDR AA physical properties")
     FNULL = open(os.devnull, 'w')
-    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats', '-a strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9', '-w', '-r','cdr3-center-5','-m', 'vdjtools/metadata.txt', 'vdjtools/'],stdout=FNULL, stderr=FNULL)
+    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats','-a strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9', '-w', '-r','cdr3-center-5','-m', 'vdjtools/metadata.txt', 'vdjtools/'],stdout=FNULL, stderr=FNULL)
     vdjtools_cdr_prop.wait()
     
 def vdjtools_DownSample(downsample):
@@ -208,24 +212,27 @@ def vdjtools_CalcDiversityStats(downsample):
 def pipeline(barcodesFile, species, minimal_overseq):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
-#    migec_checkout(barcodesFile)
+    migec_checkout(barcodesFile)
     print("Demultiplexing is complete")
     print("Collecting MIG statistics")
-#    migec_histogram()
+    migec_histogram()
     print("MIG statistics has been calculated")
     samples_overseq = assemble_param(minimal_overseq)[0]
     assemble_path = assemble_param(minimal_overseq)[1]
     for file in glob.glob("migec/checkout/*_R1.fastq.gz"):
-        filename = os.path.splitext(os.path.basename(file))[0]
-        if filename.split("_R1")[0] in samples_overseq.keys():
-            print("Assembling MIGs for " + filename.split("_R1")[0] + ". Minimal number of reeds per MIG: " +
-                 str(samples_overseq[filename.split("_R1")[0]]))
-            file_1_path = "migec/checkout/" + filename.split("_R1")[0] + "_R1" + ".fastq.gz"
-            file_2_path = "migec/checkout/" + filename.split("_R1")[0] + "_R2" + ".fastq.gz"
-            overseq = samples_overseq[filename.split("_R1")[0]]
-#            migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
-            mixcr(species, glob.glob("migec/" + assemble_path + "/" + filename.split("_R1")[0] + "_R1*.fastq")[0],
-                  glob.glob("migec/" + assemble_path + "/" + filename.split("_R1")[0] + "_R2*.fastq")[0])
+        filename = os.path.splitext(os.path.basename(file))[0].split("_R1")[0]
+        if filename in samples_overseq.keys():
+            print("Assembling MIGs for " + filename + ". Minimal number of reads per MIG: " +
+                 str(samples_overseq[filename]))
+            file_1_path = "migec/checkout/" + filename + "_R1" + ".fastq.gz"
+            file_2_path = "migec/checkout/" + filename + "_R2" + ".fastq.gz"
+            overseq = samples_overseq[filename]
+            migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
+            mixcr_align(species, "migec/" + assemble_path + "/" + filename + "_R1*.fastq", "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
+            mixcr_assemble(filename)
+            mixcr_export(filename)
+
+
     print("Creating metadata file")
     metadata_creator()
     vdjtools_convert()
