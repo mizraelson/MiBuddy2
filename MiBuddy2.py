@@ -50,7 +50,7 @@ def report(minimal_overseq,downsample):
     report.to_csv("report_simple.txt", sep='\t', index=False, na_rep="NA")
 
     report.rename(columns=rename_columns, inplace=True)
-    report_concat = pd.concat({'Metadata': report[met_cols],'Basic_Statistics': report[list(rename_columns.values()),\
+    report_concat = pd.concat({'Metadata': report[met_cols],'Basic_Statistics': report[list(rename_columns.values())[1]],\
                     'CDR3_AA_physical_properties':report[CdrAAprofile_cols],\
                     'Diversity_statistics':report[["Downsample_UMI"]+divers_cols]}, axis=1).reindex(columns=["Metadata",'Basic_Statistics',"CDR3_AA_physical_properties","Diversity_statistics"], level=0)
     report_concat.index += 1
@@ -231,7 +231,6 @@ def pipeline(barcodesFile, species, minimal_overseq):
             mixcr_align(species, "migec/" + assemble_path + "/" + filename + "_R1*.fastq", "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
             mixcr_assemble(filename)
             mixcr_export(filename)
-
 
     print("Creating metadata file")
     metadata_creator()
