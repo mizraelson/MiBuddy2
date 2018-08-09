@@ -6,6 +6,19 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
+#Returns chains to export from file_name
+
+def ChainFromFilename(filename):
+    chain_list=['TRA','TRB','TRG','TRD','TCR','IGH','IGK','IGL','IG']
+    chains=[]
+    getchain = (x for x in filename.split("_") if x in chain_list)
+    for x in getchain:
+        chains.append(x)
+    if not chains:
+        return 'ALL'
+    else:
+        return ','.join(chains)
+
 #report
 def report(minimal_overseq,downsample):
     
@@ -56,8 +69,6 @@ def report(minimal_overseq,downsample):
     report_concat.index += 1
 
     report_concat.to_excel("report.xls",header=True, na_rep="NA", merge_cells=True)
-    
-    
 
 #Returns downsample UMI value
 
@@ -167,9 +178,10 @@ def mixcr_assemble(vdjca_file):
 
 def mixcr_export(clns_file):
     FNULL = open(os.devnull, 'w')
-    print("Exporting clones for " + clns_file)
+    chain=ChainFromFilename(clns_file)
+    print('Exporting '+chain+' clones for ' + clns_file)
     mixcr_export = subprocess.Popen(
-        ['mixcr', 'exportClones','-o','--filter-stops','-f','mixcr/' + clns_file + '.clns',
+        ['mixcr', 'exportClones','-o','--filter-stops','-f', '-c', chain,'mixcr/' + clns_file + '.clns',
          'mixcr/' + clns_file + '.txt'],
         stdout=FNULL, stderr=FNULL)
     mixcr_export.wait()
@@ -212,10 +224,10 @@ def vdjtools_CalcDiversityStats(downsample):
 def pipeline(barcodesFile, species, minimal_overseq):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
-    migec_checkout(barcodesFile)
+#    migec_checkout(barcodesFile)
     print("Demultiplexing is complete")
     print("Collecting MIG statistics")
-    migec_histogram()
+#    migec_histogram()
     print("MIG statistics has been calculated")
     samples_overseq = assemble_param(minimal_overseq)[0]
     assemble_path = assemble_param(minimal_overseq)[1]
@@ -226,10 +238,10 @@ def pipeline(barcodesFile, species, minimal_overseq):
                  str(samples_overseq[filename]))
             file_1_path = "migec/checkout/" + filename + "_R1" + ".fastq.gz"
             file_2_path = "migec/checkout/" + filename + "_R2" + ".fastq.gz"
-            overseq = samples_overseq[filename]
-            migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
-            mixcr_align(species, "migec/" + assemble_path + "/" + filename + "_R1*.fastq", "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
-            mixcr_assemble(filename)
+            # overseq = samples_overseq[filename]
+            # migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
+            # mixcr_align(species, "migec/" + assemble_path + "/" + filename + "_R1*.fastq", "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
+            # mixcr_assemble(filename)
             mixcr_export(filename)
 
     print("Creating metadata file")
