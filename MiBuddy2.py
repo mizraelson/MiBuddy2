@@ -6,11 +6,12 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
-#Returns chains to export from file_name
+
+# Returns chains to export from file_name
 
 def ChainFromFilename(filename):
-    chain_list=['TRA','TRB','TRG','TRD','TCR','IGH','IGK','IGL','IG']
-    chains=[]
+    chain_list = ['TRA', 'TRB', 'TRG', 'TRD', 'TCR', 'IGH', 'IGK', 'IGL', 'IG']
+    chains = []
     getchain = (x for x in filename.split("_") if x in chain_list)
     for x in getchain:
         chains.append(x)
@@ -19,69 +20,74 @@ def ChainFromFilename(filename):
     else:
         return ','.join(chains)
 
-#report
-def report(minimal_overseq,downsample):
-    
-    estim_col_merge=["TOTAL_READS","#SAMPLE_ID","TOTAL_MIGS"]
-    basicstat_col_merge=['count','mean_cdr3nt_length','mean_insert_size','mean_ndn_size']
-    CdrAAprofile_cols=["mjenergy","kf4","volume","strength"]
-    divers_cols=['chao1_mean','observedDiversity_mean','normalizedShannonWienerIndex_mean']
 
-    rename_columns=OrderedDict([('TOTAL_READS', 'Total_reads'),('TOTAL_MIGS','cDNA_molecules_UMI'),\
-                       ('OVERSEQ_THRESHOLD','Reads_per_UMI_threshold'),('count','CDR3_UMI_count_after_filtering'),\
-                       ('mean_cdr3nt_length','CDR3_length'),('mean_insert_size','Added_N_nucleotides'),\
-                       ('mean_ndn_size','NdN')])
+# report
+def report(minimal_overseq, downsample):
+    estim_col_merge = ["TOTAL_READS", "#SAMPLE_ID", "TOTAL_MIGS"]
+    basicstat_col_merge = ['count', 'mean_cdr3nt_length', 'mean_insert_size', 'mean_ndn_size']
+    CdrAAprofile_cols = ["mjenergy", "kf4", "volume", "strength"]
+    divers_cols = ['chao1_mean', 'observedDiversity_mean', 'normalizedShannonWienerIndex_mean']
 
-    basicstats=pd.read_table("vdjtools/basicstats.txt")
-    estimates=pd.read_table("migec/histogram/estimates.txt")
-    CdrAAProfile=pd.read_table('vdjtools/cdr3aa.stat.wt.unnorm.txt')
-    diversity=pd.read_table('vdjtools/downsample_'+str(downsample)+'/diversity.strict.exact.txt')
+    rename_columns = OrderedDict([('TOTAL_READS', 'Total_reads'), ('TOTAL_MIGS', 'cDNA_molecules_UMI'), \
+                                  ('OVERSEQ_THRESHOLD', 'Reads_per_UMI_threshold'),
+                                  ('count', 'CDR3_UMI_count_after_filtering'), \
+                                  ('mean_cdr3nt_length', 'CDR3_length'), ('mean_insert_size', 'Added_N_nucleotides'), \
+                                  ('mean_ndn_size', 'NdN')])
 
+    basicstats = pd.read_table("vdjtools/basicstats.txt")
+    estimates = pd.read_table("migec/histogram/estimates.txt")
+    CdrAAProfile = pd.read_table('vdjtools/cdr3aa.stat.wt.unnorm.txt')
+    diversity = pd.read_table('vdjtools/downsample_' + str(downsample) + '/diversity.strict.exact.txt')
 
-    met_cols = [col for col in basicstats if ('label'in col) or ('sample_id' in col)]
+    met_cols = [col for col in basicstats if ('label' in col) or ('sample_id' in col)]
 
-    report=basicstats.loc[:,met_cols]
+    report = basicstats.loc[:, met_cols]
     if minimal_overseq is None:
-        report=report.merge(estimates[estim_col_merge+['OVERSEQ_THRESHOLD']], left_on="sample_id", right_on="#SAMPLE_ID",\
-                            how="outer").drop(['#SAMPLE_ID'], axis=1)
+        report = report.merge(estimates[estim_col_merge + ['OVERSEQ_THRESHOLD']], left_on="sample_id",
+                              right_on="#SAMPLE_ID", \
+                              how="outer").drop(['#SAMPLE_ID'], axis=1)
     else:
-        report=report.merge(estimates[estim_col_merge], left_on="sample_id", right_on="#SAMPLE_ID",how="outer").drop(['#SAMPLE_ID'], axis=1)
+        report = report.merge(estimates[estim_col_merge], left_on="sample_id", right_on="#SAMPLE_ID", how="outer").drop(
+            ['#SAMPLE_ID'], axis=1)
         report["OVERSEQ_THRESHOLD"] = minimal_overseq
 
-    report=report.merge(basicstats[basicstat_col_merge+["sample_id"]],on="sample_id",how="outer")
-    report=add_property(report,CdrAAProfile,CdrAAprofile_cols)
-    report["Downsample_UMI"]=downsample
-    report=report.merge(diversity[divers_cols+['sample_id']],on="sample_id",how="outer")
-    report=report.round(2)
+    report = report.merge(basicstats[basicstat_col_merge + ["sample_id"]], on="sample_id", how="outer")
+    report = add_property(report, CdrAAProfile, CdrAAprofile_cols)
+    report["Downsample_UMI"] = downsample
+    report = report.merge(diversity[divers_cols + ['sample_id']], on="sample_id", how="outer")
+    report = report.round(2)
 
     pd.options.mode.chained_assignment = None
     for row in report.itertuples():
-        if row.count<row.Downsample_UMI:
+        if row.count < row.Downsample_UMI:
             for n in divers_cols:
-                report[n][row.Index]=np.NaN
-
-    report.to_csv("report_simple.txt", sep='\t', index=False, na_rep="NA")
+                report[n][row.Index] = np.NaN
 
     report.rename(columns=rename_columns, inplace=True)
-    report_concat = pd.concat({'Metadata': report[met_cols],'Basic_Statistics': report[list(rename_columns.values())],\
-                    'CDR3_AA_physical_properties':report[CdrAAprofile_cols],\
-                    'Diversity_statistics':report[["Downsample_UMI"]+divers_cols]}, axis=1).reindex(columns=["Metadata",'Basic_Statistics',"CDR3_AA_physical_properties","Diversity_statistics"], level=0)
+    report.to_csv("report_simple.txt", sep='\t', index=False, na_rep="NA")
+
+    report_concat = pd.concat({'Metadata': report[met_cols], 'Basic_Statistics': report[list(rename_columns.values())], \
+                               'CDR3_AA_physical_properties': report[CdrAAprofile_cols], \
+                               'Diversity_statistics': report[["Downsample_UMI"] + divers_cols]}, axis=1).reindex(
+        columns=["Metadata", 'Basic_Statistics', "CDR3_AA_physical_properties", "Diversity_statistics"], level=0)
     report_concat.index += 1
 
-    report_concat.to_excel("report.xls",header=True, na_rep="NA", merge_cells=True)
+    report_concat.to_excel("report.xls", header=True, na_rep="NA", merge_cells=True)
 
-#Returns downsample UMI value
+
+# Returns downsample UMI value
 
 def downsample_threshold(basicstats_df):
-    a=basicstats_df["count"].quantile(q=0.2)/2
-    if basicstats_df["count"].min()>a:
-        x=int(np.floor(basicstats_df["count"].min()/100)*100)
+    a = basicstats_df["count"].quantile(q=0.2) / 2
+    if basicstats_df["count"].min() > a:
+        x = int(np.floor(basicstats_df["count"].min() / 100) * 100)
     else:
-        x=int(np.floor(a/100)*100)
+        x = int(np.floor(a / 100) * 100)
     if x >= 500:
         return x
     else:
         return 500
+
 
 # Generating parameters for MiGec assembly
 def assemble_param(minimal_overseq):
@@ -96,6 +102,7 @@ def assemble_param(minimal_overseq):
                 samples_overseq[line.split()[0]] = minimal_overseq
                 output_dir = "assemble_t" + str(minimal_overseq)
     return samples_overseq, output_dir
+
 
 # Creating metadata file for VDJtools
 def metadata_creator():
@@ -115,24 +122,26 @@ def metadata_creator():
     metadata.columns = col_names
     metadata.to_csv("mixcr/metadata.txt", sep='\t', index=False, na_rep="NA")
 
-# Deletes empty samples from metadata    
-def metadata_drop_zero_count(downsample):    
-    samples_id_drop=[]
-    basicstats=pd.read_table("vdjtools/basicstats.txt")
-    metadata_downsample=pd.read_table('vdjtools/downsample_'+str(downsample)+'/metadata.txt')
+
+# Deletes empty samples from metadata
+def metadata_drop_zero_count(downsample):
+    samples_id_drop = []
+    basicstats = pd.read_table("vdjtools/basicstats.txt")
+    metadata_downsample = pd.read_table('vdjtools/downsample_' + str(downsample) + '/metadata.txt')
     for i in basicstats['sample_id']:
-        if basicstats.loc[basicstats['sample_id']==i,'count'].all()==0:
+        if basicstats.loc[basicstats['sample_id'] == i, 'count'].all() == 0:
             samples_id_drop.append(i)
     metadata_filter = metadata_downsample[~metadata_downsample['sample_id'].isin(samples_id_drop)]
-    metadata_filter.to_csv('vdjtools/downsample_'+str(downsample)+'/metadata_filter.txt', sep='\t', index=False)
-    
-#Adds physical properties to the report dataframe    
-def add_property(df,CdrAAProfile_df,property_list):
+    metadata_filter.to_csv('vdjtools/downsample_' + str(downsample) + '/metadata_filter.txt', sep='\t', index=False)
+
+
+# Adds physical properties to the report dataframe
+def add_property(df, CdrAAProfile_df, property_list):
     for i in property_list:
         if i not in df:
-            property_table=CdrAAProfile_df[CdrAAProfile_df['property'].str.contains(i)]
-            df = pd.merge(df,property_table[['sample_id','mean']],on='sample_id', how='left')
-            df=df.rename(columns={"mean":i})
+            property_table = CdrAAProfile_df[CdrAAProfile_df['property'].str.contains(i)]
+            df = pd.merge(df, property_table[['sample_id', 'mean']], on='sample_id', how='left')
+            df = df.rename(columns={"mean": i})
     return df
 
 
@@ -161,38 +170,42 @@ def mixcr_align(species, file_R1, file_R2):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0])
     FNULL = open(os.devnull, 'w')
     mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
-                                       file_R1, file_R2,
-                                       'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
-                                           0] + '.vdjca'],
-                                      stdout=FNULL, stderr=FNULL)
+                                        file_R1, file_R2,
+                                        'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
+                                            0] + '.vdjca'],
+                                       stdout=FNULL, stderr=FNULL)
     mixcr_alignment.wait()
+
 
 def mixcr_assemble(vdjca_file):
     FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
     mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
-                                      vdjca_file + '.vdjca',
-                                      'mixcr/' + vdjca_file + '.clns'],
-                                     stdout=FNULL, stderr=FNULL)
+                                       vdjca_file + '.vdjca',
+                                       'mixcr/' + vdjca_file + '.clns'],
+                                      stdout=FNULL, stderr=FNULL)
     mixcr_assemble.wait()
+
 
 def mixcr_export(clns_file):
     FNULL = open(os.devnull, 'w')
-    chain=ChainFromFilename(clns_file)
-    print('Exporting '+chain+' clones for ' + clns_file)
+    chain = ChainFromFilename(clns_file)
+    print('Exporting ' + chain + ' clones for ' + clns_file)
     mixcr_export = subprocess.Popen(
-        ['mixcr', 'exportClones','-o','--filter-stops','-f', '-c', chain,'mixcr/' + clns_file + '.clns',
+        ['mixcr', 'exportClones', '-o', '--filter-stops', '-f', '-c', chain, 'mixcr/' + clns_file + '.clns',
          'mixcr/' + clns_file + '.txt'],
         stdout=FNULL, stderr=FNULL)
     mixcr_export.wait()
+
 
 # Converting mixcr output for VDJTools, calc basic stats
 def vdjtools_convert():
     print("Converting files to vdjtools format")
     FNULL = open(os.devnull, 'w')
     vdjtools_convert = subprocess.Popen(['vdjtools', 'Convert', '-S', 'MiXCR', '-m', 'mixcr/metadata.txt',
-                                        'vdjtools/'], stdout=FNULL, stderr=FNULL)
+                                         'vdjtools/'], stdout=FNULL, stderr=FNULL)
     vdjtools_convert.wait()
+
 
 def vdjtools_CalcBasicStats():
     print("Calculating basic statistics")
@@ -200,25 +213,34 @@ def vdjtools_CalcBasicStats():
     vdjtools_basicstats = subprocess.Popen(['vdjtools', 'CalcBasicStats', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
                                            stdout=FNULL, stderr=FNULL)
     vdjtools_basicstats.wait()
-    
+
+
 def vdjtools_CalcCdrAAProfile():
     print("Calculating CDR AA physical properties")
     FNULL = open(os.devnull, 'w')
-    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats','-a strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9', '-w', '-r','cdr3-center-5','-m', 'vdjtools/metadata.txt', 'vdjtools/'],stdout=FNULL, stderr=FNULL)
+    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats',
+                                          '-a strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9',
+                                          '-w', '-r', 'cdr3-center-5', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
+                                         stdout=FNULL, stderr=FNULL)
     vdjtools_cdr_prop.wait()
-    
+
+
 def vdjtools_DownSample(downsample):
-    print("Downsampling data to "+str(downsample)+' events')
+    print("Downsampling data to " + str(downsample) + ' events')
     FNULL = open(os.devnull, 'w')
-    vdjtools_downsample = subprocess.Popen(['vdjtools', 'DownSample', '-x', str(downsample),'-m', 'vdjtools/metadata.txt', 'vdjtools/downsample_'+str(downsample)+'/'],stdout=FNULL, stderr=FNULL)
+    vdjtools_downsample = subprocess.Popen(
+        ['vdjtools', 'DownSample', '-x', str(downsample), '-m', 'vdjtools/metadata.txt',
+         'vdjtools/downsample_' + str(downsample) + '/'], stdout=FNULL, stderr=FNULL)
     vdjtools_downsample.wait()
+
 
 def vdjtools_CalcDiversityStats(downsample):
     print("Calculating diversity statistics for downsampled data")
     FNULL = open(os.devnull, 'w')
-    vdjtools_diversity = subprocess.Popen(['vdjtools', 'CalcDiversityStats', '-m', 'vdjtools/downsample_'+str(downsample)+'/metadata_filter.txt', 'vdjtools/downsample_'+str(downsample)+'/'], stdout=FNULL, stderr=FNULL)
+    vdjtools_diversity = subprocess.Popen(
+        ['vdjtools', 'CalcDiversityStats', '-m', 'vdjtools/downsample_' + str(downsample) + '/metadata_filter.txt',
+         'vdjtools/downsample_' + str(downsample) + '/'], stdout=FNULL, stderr=FNULL)
     vdjtools_diversity.wait()
-    
 
 
 def pipeline(barcodesFile, species, minimal_overseq):
@@ -234,13 +256,14 @@ def pipeline(barcodesFile, species, minimal_overseq):
     for file in glob.glob("migec/checkout/*_R1.fastq.gz"):
         filename = os.path.splitext(os.path.basename(file))[0].split("_R1")[0]
         if filename in samples_overseq.keys():
-            print("Assembling MIGs for " + filename + ". Minimal number of reads per MIG: " +
-                 str(samples_overseq[filename]))
+            print("Assembling MIGs for {0}. Minimal number of reads per MIG: {1}".format(filename, str(
+                samples_overseq[filename])))
             file_1_path = "migec/checkout/" + filename + "_R1" + ".fastq.gz"
             file_2_path = "migec/checkout/" + filename + "_R2" + ".fastq.gz"
             overseq = samples_overseq[filename]
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
-            mixcr_align(species, "migec/" + assemble_path + "/" + filename + "_R1*.fastq", "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
+            mixcr_align(species, "migec/{0}/{1}_R1*.fastq".format(assemble_path, filename),
+                        "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
             mixcr_assemble(filename)
             mixcr_export(filename)
 
@@ -249,12 +272,13 @@ def pipeline(barcodesFile, species, minimal_overseq):
     vdjtools_convert()
     vdjtools_CalcBasicStats()
     vdjtools_CalcCdrAAProfile()
-    downsample=downsample_threshold(pd.read_table("vdjtools/basicstats.txt"))
+    downsample = downsample_threshold(pd.read_table("vdjtools/basicstats.txt"))
     vdjtools_DownSample(downsample)
     metadata_drop_zero_count(downsample)
     vdjtools_CalcDiversityStats(downsample)
     print("Generating a report file")
-    report(minimal_overseq,downsample)
+    report(minimal_overseq, downsample)
+
 
 def main(args):
     dirs = ["migec", "mixcr", "vdjtools"]
