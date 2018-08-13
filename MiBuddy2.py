@@ -24,13 +24,13 @@ def ChainFromFilename(filename):
 # report
 def report(minimal_overseq, downsample):
     estim_col_merge = ["TOTAL_READS", "#SAMPLE_ID", "TOTAL_MIGS"]
-    basicstat_col_merge = ['count', 'mean_cdr3nt_length', 'mean_insert_size', 'mean_ndn_size']
+    basicstat_col_merge = ['count', 'diversity','mean_cdr3nt_length', 'mean_insert_size', 'mean_ndn_size']
     CdrAAprofile_cols = ["mjenergy", "kf4", "volume", "strength"]
     divers_cols = ['chao1_mean', 'observedDiversity_mean', 'normalizedShannonWienerIndex_mean']
 
     rename_columns = OrderedDict([('TOTAL_READS', 'Total_reads'), ('TOTAL_MIGS', 'cDNA_molecules_UMI'), \
                                   ('OVERSEQ_THRESHOLD', 'Reads_per_UMI_threshold'),
-                                  ('count', 'CDR3_UMI_count_after_filtering'), \
+                                  ('count', 'cDNA_molecules_UMI_after_filtering'), ('diversity','Clonotypes'), \
                                   ('mean_cdr3nt_length', 'CDR3_length'), ('mean_insert_size', 'Added_N_nucleotides'), \
                                   ('mean_ndn_size', 'NdN')])
 
