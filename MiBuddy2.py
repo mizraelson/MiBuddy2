@@ -262,8 +262,8 @@ def pipeline(barcodesFile, species, minimal_overseq):
             file_2_path = "migec/checkout/" + filename + "_R2" + ".fastq.gz"
             overseq = samples_overseq[filename]
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
-            mixcr_align(species, "migec/{0}/{1}_R1*.fastq".format(assemble_path, filename),
-                        "migec/" + assemble_path + "/" + filename + "_R2*.fastq")
+            mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
+                        glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
             mixcr_assemble(filename)
             mixcr_export(filename)
 
