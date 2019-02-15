@@ -188,7 +188,7 @@ def mixcr_align(species, file_R1, file_R2):
 def mixcr_assemble(vdjca_file,isotype):
     FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
-    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt',isotype, '-f', 'mixcr/' +
+    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt',str(isotype), '-f', 'mixcr/' +
                                        vdjca_file + '.vdjca',
                                        'mixcr/' + vdjca_file + '.clns'],
                                       stdout=FNULL, stderr=FNULL)
@@ -291,7 +291,7 @@ def main(args):
     for item in dirs:
         if not os.path.exists(item):
             os.makedirs(item)
-    pipeline(args.file_with_barcodes,args.s,args.overseq,args.ig,)
+    pipeline(args.file_with_barcodes,args.s,args.overseq,args.ig)
 
 
 if __name__ == '__main__':
