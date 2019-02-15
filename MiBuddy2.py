@@ -298,8 +298,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file_with_barcodes", help="Specify barcodes file")
     parser.add_argument("-s", help="Specify species: mmu for Mus musculus, hsa - Homo sapiens")
-    parser.add_argument("-ig", help="Include isotype during mixcr assemble. 'mixcr assemble -OseparateByC=true'",
-                        action='store_true',default=None)
+    parser.add_argument("-ig", help="Separate IG clones by isotypes",
+                        action='store_true')
     parser.add_argument("--overseq", "-minimal_overseq", type=int, default=None,
                         help="Force minimal overseq value for all samples")
     args = parser.parse_args()
