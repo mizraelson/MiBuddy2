@@ -20,6 +20,14 @@ def ChainFromFilename(filename):
     else:
         return ','.join(chains)
 
+# Includes isotype in mixcr assemble if -ig is specified or if "IG" is in the file name
+def Ig_isotype_mixcr(ig,filename):
+    if ig is True:
+        return '-OseparateByC=true'
+    if 'IG' in filename:
+        return '-OseparateByC=true'
+    else:
+        return None
 
 # report
 def report(minimal_overseq, downsample):
@@ -177,10 +185,10 @@ def mixcr_align(species, file_R1, file_R2):
     mixcr_alignment.wait()
 
 
-def mixcr_assemble(vdjca_file):
+def mixcr_assemble(vdjca_file,isotype):
     FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
-    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
+    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt',isotype, '-f', 'mixcr/' +
                                        vdjca_file + '.vdjca',
                                        'mixcr/' + vdjca_file + '.clns'],
                                       stdout=FNULL, stderr=FNULL)
@@ -240,7 +248,7 @@ def vdjtools_CalcDiversityStats(downsample):
     vdjtools_diversity.wait()
 
 
-def pipeline(barcodesFile, species, minimal_overseq):
+def pipeline(barcodesFile, species, minimal_overseq,ig):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
     migec_checkout(barcodesFile)
@@ -261,7 +269,8 @@ def pipeline(barcodesFile, species, minimal_overseq):
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
             mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
                         glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
-            mixcr_assemble(filename)
+            isotype=Ig_isotype_mixcr(ig,filename)
+            mixcr_assemble(filename,isotype)
             mixcr_export(filename)
 
     print("Creating metadata file")
@@ -282,13 +291,15 @@ def main(args):
     for item in dirs:
         if not os.path.exists(item):
             os.makedirs(item)
-    pipeline(args.file_with_barcodes, args.s, args.overseq)
+    pipeline(args.file_with_barcodes,args.s,args.ig,args.overseq)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file_with_barcodes", help="Specify barcodes file")
     parser.add_argument("-s", help="Specify species: mmu for Mus musculus, hsa - Homo sapiens")
+    parser.add_argument("-ig", help="Include isotype during mixcr assemble. 'mixcr assemble -OseparateByC=true'",
+                        action='store_true',default=None)
     parser.add_argument("--overseq", "-minimal_overseq", type=int, default=None,
                         help="Force minimal overseq value for all samples")
     args = parser.parse_args()
