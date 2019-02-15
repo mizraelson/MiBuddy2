@@ -291,7 +291,7 @@ def main(args):
     for item in dirs:
         if not os.path.exists(item):
             os.makedirs(item)
-    pipeline(args.file_with_barcodes,args.s,args.ig,args.overseq)
+    pipeline(args.file_with_barcodes,args.s,args.overseq,args.ig,)
 
 
 if __name__ == '__main__':
