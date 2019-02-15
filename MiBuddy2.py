@@ -20,7 +20,7 @@ def ChainFromFilename(filename):
     else:
         return ','.join(chains)
 
-# Includes isotype in mixcr assemble if -ig is specified or if "IG" is in the file name
+# Returns -OseparateByC=true if -ig is on or if a filename contains 'IG' pattern
 def Ig_isotype_mixcr(ig,filename):
     if ig is True:
         return '-OseparateByC=true'
