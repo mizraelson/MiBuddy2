@@ -218,10 +218,7 @@ def vdjtools_CalcBasicStats():
 def vdjtools_CalcCdrAAProfile():
     print("Calculating CDR AA physical properties")
     FNULL = open(os.devnull, 'w')
-    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats',
-                                          '-a strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9',
-                                          '-w', '-r', 'cdr3-center-5', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
-                                         stdout=FNULL, stderr=FNULL)
+    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats', '-a', 'strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9', '-w', '-r','cdr3-center-5','-m', 'vdjtools/metadata.txt', 'vdjtools/'],stdout=FNULL, stderr=FNULL)
     vdjtools_cdr_prop.wait()
 
 
