@@ -185,13 +185,15 @@ def mixcr_align(species, file_R1, file_R2):
     mixcr_alignment.wait()
 
 
-def mixcr_assemble(vdjca_file,isotype):
+def mixcr_assemble(vdjca_file,ig):
     FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
-    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt',str(isotype), '-f', 'mixcr/' +
-                                       vdjca_file + '.vdjca',
-                                       'mixcr/' + vdjca_file + '.clns'],
-                                      stdout=FNULL, stderr=FNULL)
+    args_mixcr_assemple=['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
+                                       vdjca_file + '.vdjca', 'mixcr/' + vdjca_file + '.clns']
+    if ig is True or 'IG' in vdjca_file:
+        args_mixcr_assemple.insert(5, '-OseparateByC=true')
+
+    mixcr_assemble = subprocess.Popen(str(args_mixcr_assemple),stdout=FNULL, stderr=FNULL)
     mixcr_assemble.wait()
 
 
@@ -269,8 +271,7 @@ def pipeline(barcodesFile, species, minimal_overseq,ig):
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
             mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
                         glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
-            isotype=Ig_isotype_mixcr(ig,filename)
-            mixcr_assemble(filename,isotype)
+            mixcr_assemble(filename,ig)
             mixcr_export(filename)
 
     print("Creating metadata file")
