@@ -20,15 +20,6 @@ def ChainFromFilename(filename):
     else:
         return ','.join(chains)
 
-# Returns -OseparateByC=true if -ig is on or if a filename contains 'IG' pattern
-def Ig_isotype_mixcr(ig,filename):
-    if ig is True:
-        return '-OseparateByC=true'
-    if 'IG' in filename:
-        return '-OseparateByC=true'
-    else:
-        return None
-
 # report
 def report(minimal_overseq, downsample):
     estim_col_merge = ["TOTAL_READS", "#SAMPLE_ID", "TOTAL_MIGS"]
