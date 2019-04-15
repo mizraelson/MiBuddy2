@@ -5,7 +5,7 @@ usage:
 
 Mibuddy2.py barcodes_file.txt -s [hsa/mmu/spalax]
 
-+ Make sure that MiGec,MiXCR and VDJtools sowtawe is installed and the paths to the executable files are set so the above sowtware is run by simply typing migec, mixcr or vdjtools. 
++ Make sure that MiGec,MiXCR and VDJtools software is installed and the paths to the executable files are set so the above software is run by simply typing migec, mixcr or vdjtools. 
 
 + Barcodes file should be created according to MiGec software needs (https://migec.readthedocs.io/en/latest/checkout.html)
 
