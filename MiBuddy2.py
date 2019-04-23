@@ -248,10 +248,10 @@ def vdjtools_CalcDiversityStats(downsample):
 def pipeline(barcodesFile, species, minimal_overseq, ig):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
-       migec_checkout(barcodesFile)
+    migec_checkout(barcodesFile)
     print("Demultiplexing is complete")
     print("Collecting MIG statistics")
-       migec_histogram()
+    migec_histogram()
     print("MIG statistics has been calculated")
     samples_overseq = assemble_param(minimal_overseq)[0]
     assemble_path = assemble_param(minimal_overseq)[1]
@@ -263,7 +263,7 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
             file_1_path = "migec/checkout/" + filename + "_R1" + ".fastq.gz"
             file_2_path = "migec/checkout/" + filename + "_R2" + ".fastq.gz"
             overseq = samples_overseq[filename]
-                       migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
+            migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
             mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
                         glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
             mixcr_assemble(filename, ig)
