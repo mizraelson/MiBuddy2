@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
+sout=open(os.devnull, 'w')
 
 # Returns chains to export from file_name
 
@@ -147,102 +148,92 @@ def add_property(df, CdrAAProfile_df, property_list):
 
 
 def migec_checkout(barcodesFile):
-    FNULL = open(os.devnull, 'w')
     demultiplexing = subprocess.Popen(
         ['migec', 'CheckoutBatch', '-cute', '--skip-undef', barcodesFile, 'migec/checkout/'],
-        stdout=FNULL, stderr=FNULL)
+        stdout=sout, stderr=sout)
     demultiplexing.wait()
 
 
 def migec_histogram():
-    FNULL = open(os.devnull, 'w')
-    hist = subprocess.Popen(['migec', 'Histogram', 'migec/checkout/', 'migec/histogram/'], stdout=FNULL, stderr=FNULL)
+
+    hist = subprocess.Popen(['migec', 'Histogram', 'migec/checkout/', 'migec/histogram/'], stdout=sout, stderr=sout)
     hist.wait()
 
 
 def migec_assemble(file_R1, file_R2, overseq, output_dir):
-    FNULL = open(os.devnull, 'w')
     assemble = subprocess.Popen(['migec', '-Xmx30G', 'Assemble', '-m', overseq, '--filter-collisions', file_R1, file_R2,
-                                 "migec/" + output_dir + "/"], stdout=FNULL, stderr=FNULL)
+                                 "migec/" + output_dir + "/"], stdout=sout, stderr=sout)
     assemble.wait()
 
 
-def mixcr_align(species, file_R1, file_R2):
-    print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[0])
-    FNULL = open(os.devnull, 'w')
+def mixcr_align(species, file_r1, file_r2):
+    print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0])
     mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
-                                        file_R1, file_R2,
-                                        'mixcr/' + os.path.splitext(os.path.basename(file_R1))[0].split("_R1")[
+                                        file_r1, file_r2,
+                                        'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[
                                             0] + '.vdjca'],
-                                       stdout=FNULL, stderr=FNULL)
+                                       stdout=sout, stderr=sout)
     mixcr_alignment.wait()
 
 
 def mixcr_assemble(vdjca_file, ig):
-    FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
     args_mixcr_assemple = ['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
                            vdjca_file + '.vdjca', 'mixcr/' + vdjca_file + '.clns']
     if ig is True or 'IG' in vdjca_file:
         args_mixcr_assemple.insert(5, '-OseparateByC=true')
 
-    mixcr_assemble = subprocess.Popen(args_mixcr_assemple, stdout=FNULL, stderr=FNULL)
+    mixcr_assemble = subprocess.Popen(args_mixcr_assemple, stdout=sout, stderr=sout)
     mixcr_assemble.wait()
 
 
 def mixcr_export(clns_file):
-    FNULL = open(os.devnull, 'w')
     chain = ChainFromFilename(clns_file)
     print('Exporting ' + chain + ' clones for ' + clns_file)
     mixcr_export = subprocess.Popen(
         ['mixcr', 'exportClones', '-o', '--filter-stops', '-f', '-c', chain, 'mixcr/' + clns_file + '.clns',
          'mixcr/' + clns_file + '.txt'],
-        stdout=FNULL, stderr=FNULL)
+        stdout=sout, stderr=sout)
     mixcr_export.wait()
 
 
 # Converting mixcr output for VDJTools, calc basic stats
 def vdjtools_convert():
     print("Converting files to vdjtools format")
-    FNULL = open(os.devnull, 'w')
     vdjtools_convert = subprocess.Popen(['vdjtools', 'Convert', '-S', 'MiXCR', '-m', 'mixcr/metadata.txt',
-                                         'vdjtools/'], stdout=FNULL, stderr=FNULL)
+                                         'vdjtools/'], stdout=sout, stderr=sout)
     vdjtools_convert.wait()
 
 
 def vdjtools_CalcBasicStats():
     print("Calculating basic statistics")
-    FNULL = open(os.devnull, 'w')
     vdjtools_basicstats = subprocess.Popen(['vdjtools', 'CalcBasicStats', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
-                                           stdout=FNULL, stderr=FNULL)
+                                           stdout=sout, stderr=sout)
     vdjtools_basicstats.wait()
 
 
 def vdjtools_CalcCdrAAProfile():
     print("Calculating CDR AA physical properties")
-    FNULL = open(os.devnull, 'w')
     vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats', '-a',
                                           'strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9',
                                           '-w', '-r', 'cdr3-center-5', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
-                                         stdout=FNULL, stderr=FNULL)
+                                         stdout=sout, stderr=sout)
     vdjtools_cdr_prop.wait()
 
 
 def vdjtools_DownSample(downsample):
     print("Downsampling data to " + str(downsample) + ' events')
-    FNULL = open(os.devnull, 'w')
     vdjtools_downsample = subprocess.Popen(
         ['vdjtools', 'DownSample', '-x', str(downsample), '-m', 'vdjtools/metadata.txt',
-         'vdjtools/downsample_' + str(downsample) + '/'], stdout=FNULL, stderr=FNULL)
+         'vdjtools/downsample_' + str(downsample) + '/'], stdout=sout, stderr=sout)
     vdjtools_downsample.wait()
 
 
 def vdjtools_CalcDiversityStats(downsample):
     print("Calculating diversity statistics for downsampled data")
-    FNULL = open(os.devnull, 'w')
     vdjtools_diversity = subprocess.Popen(
         ['vdjtools', 'CalcDiversityStats', '-m', 'vdjtools/downsample_' + str(downsample) + '/metadata_filter.txt',
-         'vdjtools/downsample_' + str(downsample) + '/'], stdout=FNULL, stderr=FNULL)
+         'vdjtools/downsample_' + str(downsample) + '/'], stdout=sout, stderr=sout)
     vdjtools_diversity.wait()
 
 
@@ -284,6 +275,9 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
 
 
 def main(args):
+    global sout
+    if args.debug:
+        sout=subprocess.PIPE
     dirs = ["migec", "mixcr", "vdjtools"]
     for item in dirs:
         if not os.path.exists(item):
@@ -297,6 +291,7 @@ if __name__ == '__main__':
     parser.add_argument("-s", help="Specify species: mmu for Mus musculus, hsa - Homo sapiens")
     parser.add_argument("-ig", help="Separate IG clones by isotypes",
                         action='store_true')
+    parser.add_argument("-debug", help="return output", action='store_false')
     parser.add_argument("--overseq", "-minimal_overseq", type=int, default=None,
                         help="Force minimal overseq value for all samples")
     args = parser.parse_args()

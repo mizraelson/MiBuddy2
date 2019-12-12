@@ -4,9 +4,7 @@ ARG mixcrVersion=3.0.12
 ARG migecVersion=1.2.9
 ARG vdjtoolsVersion=1.2.1
 
-
 RUN apt-get update
-#RUN apt-get install -y python3-pip curl bash jq wget unzip procps ruby curl file git autoconf automake make gcc groff default-jdk zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev
 RUN apt-get install -y wget python3-pip unzip
 RUN rm -r -f /var/lib/apt/lists/*
 RUN mkdir /data
@@ -38,6 +36,7 @@ RUN pip3 install -r /MiBuddy2/requirements.txt \
 ENV PATH="/mixcr:/migec:/vdjtools:/MiBuddy2:${PATH}"
 ENV JAVA_XMX="7g"
 
-ENTRYPOINT MiBuddy2.py
+WORKDIR /data
+ENTRYPOINT ["MiBuddy2.py"]
 
 
