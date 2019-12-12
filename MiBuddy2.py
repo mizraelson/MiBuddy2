@@ -24,13 +24,13 @@ def ChainFromFilename(filename):
 # report
 def report(minimal_overseq, downsample):
     estim_col_merge = ["TOTAL_READS", "#SAMPLE_ID", "TOTAL_MIGS"]
-    basicstat_col_merge = ['count', 'diversity','mean_cdr3nt_length', 'mean_insert_size', 'mean_ndn_size']
+    basicstat_col_merge = ['count', 'diversity', 'mean_cdr3nt_length', 'mean_insert_size', 'mean_ndn_size']
     CdrAAprofile_cols = ["mjenergy", "kf4", "volume", "strength"]
     divers_cols = ['chao1_mean', 'observedDiversity_mean', 'normalizedShannonWienerIndex_mean']
 
     rename_columns = OrderedDict([('TOTAL_READS', 'Total_reads'), ('TOTAL_MIGS', 'cDNA_molecules_UMI'), \
                                   ('OVERSEQ_THRESHOLD', 'Reads_per_UMI_threshold'),
-                                  ('count', 'cDNA_molecules_UMI_after_filtering'), ('diversity','Clonotypes'), \
+                                  ('count', 'cDNA_molecules_UMI_after_filtering'), ('diversity', 'Clonotypes'), \
                                   ('mean_cdr3nt_length', 'CDR3_length'), ('mean_insert_size', 'Added_N_nucleotides'), \
                                   ('mean_ndn_size', 'NdN')])
 
@@ -177,13 +177,15 @@ def mixcr_align(species, file_R1, file_R2):
     mixcr_alignment.wait()
 
 
-def mixcr_assemble(vdjca_file):
+def mixcr_assemble(vdjca_file, ig):
     FNULL = open(os.devnull, 'w')
     print("Starting MiXCR assemble for " + vdjca_file)
-    mixcr_assemble = subprocess.Popen(['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
-                                       vdjca_file + '.vdjca',
-                                       'mixcr/' + vdjca_file + '.clns'],
-                                      stdout=FNULL, stderr=FNULL)
+    args_mixcr_assemple = ['mixcr', 'assemble', '-r', 'mixcr/assembleReport.txt', '-f', 'mixcr/' +
+                           vdjca_file + '.vdjca', 'mixcr/' + vdjca_file + '.clns']
+    if ig is True or 'IG' in vdjca_file:
+        args_mixcr_assemple.insert(5, '-OseparateByC=true')
+
+    mixcr_assemble = subprocess.Popen(args_mixcr_assemple, stdout=FNULL, stderr=FNULL)
     mixcr_assemble.wait()
 
 
@@ -218,7 +220,10 @@ def vdjtools_CalcBasicStats():
 def vdjtools_CalcCdrAAProfile():
     print("Calculating CDR AA physical properties")
     FNULL = open(os.devnull, 'w')
-    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats', '-a', 'strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9', '-w', '-r','cdr3-center-5','-m', 'vdjtools/metadata.txt', 'vdjtools/'],stdout=FNULL, stderr=FNULL)
+    vdjtools_cdr_prop = subprocess.Popen(['vdjtools', 'CalcCdrAaStats', '-a',
+                                          'strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9',
+                                          '-w', '-r', 'cdr3-center-5', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
+                                         stdout=FNULL, stderr=FNULL)
     vdjtools_cdr_prop.wait()
 
 
@@ -240,7 +245,7 @@ def vdjtools_CalcDiversityStats(downsample):
     vdjtools_diversity.wait()
 
 
-def pipeline(barcodesFile, species, minimal_overseq):
+def pipeline(barcodesFile, species, minimal_overseq, ig):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
     migec_checkout(barcodesFile)
@@ -261,7 +266,7 @@ def pipeline(barcodesFile, species, minimal_overseq):
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
             mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
                         glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
-            mixcr_assemble(filename)
+            mixcr_assemble(filename, ig)
             mixcr_export(filename)
 
     print("Creating metadata file")
@@ -282,15 +287,16 @@ def main(args):
     for item in dirs:
         if not os.path.exists(item):
             os.makedirs(item)
-    pipeline(args.file_with_barcodes, args.s, args.overseq)
+    pipeline(args.file_with_barcodes, args.s, args.overseq, args.ig)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file_with_barcodes", help="Specify barcodes file")
     parser.add_argument("-s", help="Specify species: mmu for Mus musculus, hsa - Homo sapiens")
+    parser.add_argument("-ig", help="Separate IG clones by isotypes",
+                        action='store_true')
     parser.add_argument("--overseq", "-minimal_overseq", type=int, default=None,
                         help="Force minimal overseq value for all samples")
-    parser.add_argument("-ig", help="Apply if work with IG data to include isotype. Turns on -OseparateByC=true for mixcr assemble")
     args = parser.parse_args()
     main(args)
