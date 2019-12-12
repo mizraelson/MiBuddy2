@@ -277,7 +277,7 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
 def main(args):
     global sout
     if args.debug:
-        sout=subprocess.PIPE
+        sout=Pipe
     dirs = ["migec", "mixcr", "vdjtools"]
     for item in dirs:
         if not os.path.exists(item):

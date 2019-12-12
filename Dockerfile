@@ -5,7 +5,7 @@ ARG migecVersion=1.2.9
 ARG vdjtoolsVersion=1.2.1
 
 RUN apt-get update
-RUN apt-get install -y wget python3-pip unzip
+RUN apt-get install -y wget python3-pip unzip default-jdk
 RUN rm -r -f /var/lib/apt/lists/*
 RUN mkdir /data
 RUN mkdir /MiBuddy2
@@ -31,7 +31,8 @@ RUN cd / \
 COPY MiBuddy2.py requirements.txt /MiBuddy2/
 
 RUN pip3 install -r /MiBuddy2/requirements.txt \
-    && chmod +x /MiBuddy2/MiBuddy2.py
+    && chmod +x /MiBuddy2/MiBuddy2.py \
+    && chmod +x /vdjtools/vdjtools
 
 ENV PATH="/mixcr:/migec:/vdjtools:/MiBuddy2:${PATH}"
 ENV JAVA_XMX="7g"
