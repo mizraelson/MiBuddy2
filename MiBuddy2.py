@@ -278,7 +278,7 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
 def main(args):
     global sout
     if args.debug:
-        sout=Pipe
+        sout=True
     dirs = ["migec", "mixcr", "vdjtools"]
     for item in dirs:
         if not os.path.exists(item):
@@ -292,7 +292,7 @@ if __name__ == '__main__':
     parser.add_argument("-s", help="Specify species: mmu for Mus musculus, hsa - Homo sapiens")
     parser.add_argument("-ig", help="Separate IG clones by isotypes",
                         action='store_true')
-    parser.add_argument("-debug", help="return output", action='store_false')
+    parser.add_argument("-debug", help="return output", action='store_true')
     parser.add_argument("--overseq", "-minimal_overseq", type=int, default=None,
                         help="Force minimal overseq value for all samples")
     args = parser.parse_args()
