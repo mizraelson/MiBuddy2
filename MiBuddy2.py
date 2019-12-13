@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import glob
 import os
@@ -151,6 +152,7 @@ def migec_checkout(barcodesFile):
     demultiplexing = subprocess.Popen(
         ['migec', 'CheckoutBatch', '-cute', '--skip-undef', barcodesFile, 'migec/checkout/'],
         stdout=sout, stderr=sout)
+
     demultiplexing.wait()
 
 
@@ -161,7 +163,7 @@ def migec_histogram():
 
 
 def migec_assemble(file_R1, file_R2, overseq, output_dir):
-    assemble = subprocess.Popen(['migec', '-Xmx30G', 'Assemble', '-m', overseq, '--filter-collisions', file_R1, file_R2,
+    assemble = subprocess.Popen(['migec', 'Assemble', '-m', overseq, '--filter-collisions', file_R1, file_R2,
                                  "migec/" + output_dir + "/"], stdout=sout, stderr=sout)
     assemble.wait()
 
@@ -170,8 +172,7 @@ def mixcr_align(species, file_r1, file_r2):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0])
     mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
                                         file_r1, file_r2,
-                                        'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[
-                                            0] + '.vdjca'],
+                                        'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
                                        stdout=sout, stderr=sout)
     mixcr_alignment.wait()
 
