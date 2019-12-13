@@ -3,12 +3,19 @@
 import argparse
 import glob
 import os
+import sys
 import subprocess
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
 sout=open(os.devnull, 'w')
+
+#check exit status
+def check_status(process):
+    if process != 0:
+        print("There were some errors")
+        sys.exit("I have had enough of my life. I quit!")
 
 # Returns chains to export from file_name
 
@@ -153,19 +160,20 @@ def migec_checkout(barcodesFile):
         ['migec', 'CheckoutBatch', '-cute', '--skip-undef', barcodesFile, 'migec/checkout/'],
         stdout=sout, stderr=sout)
 
-    demultiplexing.wait()
+    check_status(demultiplexing.wait())
+
 
 
 def migec_histogram():
 
     hist = subprocess.Popen(['migec', 'Histogram', 'migec/checkout/', 'migec/histogram/'], stdout=sout, stderr=sout)
-    hist.wait()
+    check_status(hist.wait())
 
 
 def migec_assemble(file_R1, file_R2, overseq, output_dir):
     assemble = subprocess.Popen(['migec', 'Assemble', '-m', overseq, '--filter-collisions', file_R1, file_R2,
                                  "migec/" + output_dir + "/"], stdout=sout, stderr=sout)
-    assemble.wait()
+    check_status(assemble.wait())
 
 
 def mixcr_align(species, file_r1, file_r2):
@@ -174,7 +182,7 @@ def mixcr_align(species, file_r1, file_r2):
                                         file_r1, file_r2,
                                         'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
                                        stdout=sout, stderr=sout)
-    mixcr_alignment.wait()
+    check_status(mixcr_alignment.wait())
 
 
 def mixcr_assemble(vdjca_file, ig):
@@ -185,7 +193,7 @@ def mixcr_assemble(vdjca_file, ig):
         args_mixcr_assemple.insert(5, '-OseparateByC=true')
 
     mixcr_assemble = subprocess.Popen(args_mixcr_assemple, stdout=sout, stderr=sout)
-    mixcr_assemble.wait()
+    check_status(mixcr_assemble.wait())
 
 
 def mixcr_export(clns_file):
@@ -195,7 +203,7 @@ def mixcr_export(clns_file):
         ['mixcr', 'exportClones', '-o', '--filter-stops', '-f', '-c', chain, 'mixcr/' + clns_file + '.clns',
          'mixcr/' + clns_file + '.txt'],
         stdout=sout, stderr=sout)
-    mixcr_export.wait()
+    check_status(mixcr_export.wait())
 
 
 # Converting mixcr output for VDJTools, calc basic stats
@@ -203,14 +211,14 @@ def vdjtools_convert():
     print("Converting files to vdjtools format")
     vdjtools_convert = subprocess.Popen(['vdjtools', 'Convert', '-S', 'MiXCR', '-m', 'mixcr/metadata.txt',
                                          'vdjtools/'], stdout=sout, stderr=sout)
-    vdjtools_convert.wait()
+    check_status(vdjtools_convert.wait())
 
 
 def vdjtools_CalcBasicStats():
     print("Calculating basic statistics")
     vdjtools_basicstats = subprocess.Popen(['vdjtools', 'CalcBasicStats', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
                                            stdout=sout, stderr=sout)
-    vdjtools_basicstats.wait()
+    check_status(vdjtools_basicstats.wait())
 
 
 def vdjtools_CalcCdrAAProfile():
@@ -219,7 +227,7 @@ def vdjtools_CalcCdrAAProfile():
                                           'strength,kf10,turn,cdr3contact,rim,alpha,beta,polarity,charge,surface,hydropathy,count,mjenergy,volume,core,disorder,kf2,kf1,kf4,kf3,kf6,kf5,kf8,kf7,kf9',
                                           '-w', '-r', 'cdr3-center-5', '-m', 'vdjtools/metadata.txt', 'vdjtools/'],
                                          stdout=sout, stderr=sout)
-    vdjtools_cdr_prop.wait()
+    check_status(vdjtools_cdr_prop.wait())
 
 
 def vdjtools_DownSample(downsample):
@@ -227,7 +235,7 @@ def vdjtools_DownSample(downsample):
     vdjtools_downsample = subprocess.Popen(
         ['vdjtools', 'DownSample', '-x', str(downsample), '-m', 'vdjtools/metadata.txt',
          'vdjtools/downsample_' + str(downsample) + '/'], stdout=sout, stderr=sout)
-    vdjtools_downsample.wait()
+    check_status(vdjtools_downsample.wait())
 
 
 def vdjtools_CalcDiversityStats(downsample):
@@ -235,7 +243,7 @@ def vdjtools_CalcDiversityStats(downsample):
     vdjtools_diversity = subprocess.Popen(
         ['vdjtools', 'CalcDiversityStats', '-m', 'vdjtools/downsample_' + str(downsample) + '/metadata_filter.txt',
          'vdjtools/downsample_' + str(downsample) + '/'], stdout=sout, stderr=sout)
-    vdjtools_diversity.wait()
+    check_status(vdjtools_diversity.wait())
 
 
 def pipeline(barcodesFile, species, minimal_overseq, ig):
