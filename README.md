@@ -14,3 +14,5 @@ Mibuddy2.py barcodes_file.txt -s [hsa/mmu/spalax]
 + To include isotype (mixcr assemble -OseparateByC=true ...) pass an optional -ig parameter to the main command or include 'IG' in the sample_id.
 
 + Using '\_' in the sample_id will result in separating values in between '\_' into different metadata colomns in the metadata.txt file as well as in the report.txt output file.
+
++ -debug returns all logs
