@@ -179,9 +179,8 @@ def migec_assemble(file_R1, file_R2, overseq, output_dir):
 def mixcr_align(species, file_r1, file_r2):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0])
     mixcr_alignment = subprocess.Popen(
-        ['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', '-OreadsLayout=Collinear',
-         species, file_r1, file_r2,
-         'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
+        ['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-OreadsLayout=Collinear', '-s', species, file_r1,
+         file_r2, 'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
         stdout=sout, stderr=sout)
     check_status(mixcr_alignment.wait())
 
