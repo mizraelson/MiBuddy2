@@ -9,13 +9,15 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
-sout=open(os.devnull, 'w')
+sout = open(os.devnull, 'w')
 
-#check exit status
+
+# check exit status
 def check_status(process):
     if process != 0:
         print("There were some errors")
         sys.exit("I have had enough of my life. I quit!")
+
 
 # Returns chains to export from file_name
 
@@ -163,9 +165,7 @@ def migec_checkout(barcodesFile):
     check_status(demultiplexing.wait())
 
 
-
 def migec_histogram():
-
     hist = subprocess.Popen(['migec', 'Histogram', 'migec/checkout/', 'migec/histogram/'], stdout=sout, stderr=sout)
     check_status(hist.wait())
 
@@ -178,10 +178,11 @@ def migec_assemble(file_R1, file_R2, overseq, output_dir):
 
 def mixcr_align(species, file_r1, file_r2):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0])
-    mixcr_alignment = subprocess.Popen(['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species,
-                                        file_r1, file_r2,
-                                        'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
-                                       stdout=sout, stderr=sout)
+    mixcr_alignment = subprocess.Popen(
+        ['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', '-OreadsLayout=Collinear',
+         species, file_r1, file_r2,
+         'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
+        stdout=sout, stderr=sout)
     check_status(mixcr_alignment.wait())
 
 
@@ -286,7 +287,7 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
 def main(args):
     global sout
     if args.debug:
-        sout=True
+        sout = True
     dirs = ["migec", "mixcr", "vdjtools"]
     for item in dirs:
         if not os.path.exists(item):
