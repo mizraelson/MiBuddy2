@@ -305,4 +305,3 @@ if __name__ == '__main__':
                         help="Force minimal overseq value for all samples")
     args = parser.parse_args()
     main(args)
-    
