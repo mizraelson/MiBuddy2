@@ -176,12 +176,14 @@ def migec_assemble(file_R1, file_R2, overseq, output_dir):
     check_status(assemble.wait())
 
 
-def mixcr_align(species, file_r1, file_r2):
+def mixcr_align(species, file_r1, file_r2, ig):
     print("Starting MiXCR alignment for " + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0])
-    mixcr_alignment = subprocess.Popen(
-        ['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species, file_r1,
-         file_r2, 'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] + '.vdjca'],
-        stdout=sout, stderr=sout)
+    args_mixcr_align = ['mixcr', 'align', '-r', 'mixcr/alignmentReport.txt', '-f', '-s', species, file_r1,
+                        file_r2, 'mixcr/' + os.path.splitext(os.path.basename(file_r1))[0].split("_R1")[0] +
+                        '.vdjca']
+    if ig is True or 'IG' in file_r1:
+        args_mixcr_align[5:5] = ['--trimming-window-size', '4', '--trimming-quality-threshold', '20']
+    mixcr_alignment = subprocess.Popen(args_mixcr_align, stdout=sout, stderr=sout)
     check_status(mixcr_alignment.wait())
 
 
