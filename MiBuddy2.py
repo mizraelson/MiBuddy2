@@ -247,7 +247,6 @@ def vdjtools_CalcDiversityStats(downsample):
          'vdjtools/downsample_' + str(downsample) + '/'], stdout=sout, stderr=sout)
     check_status(vdjtools_diversity.wait())
 
-
 def pipeline(barcodesFile, species, minimal_overseq, ig):
     print("\033[1;36;40mMiBuddy will take care of your data\033[0m")
     print("Starting demultiplexing")
@@ -268,10 +267,9 @@ def pipeline(barcodesFile, species, minimal_overseq, ig):
             overseq = samples_overseq[filename]
             migec_assemble(file_1_path, file_2_path, str(overseq), assemble_path)
             mixcr_align(species, glob.glob("migec/{0}/{1}_R1*.fastq".format(assemble_path, filename))[0],
-                        glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0])
+                        glob.glob("migec/{0}/{1}_R2*.fastq".format(assemble_path, filename))[0], ig)
             mixcr_assemble(filename, ig)
             mixcr_export(filename)
-
     print("Creating metadata file")
     metadata_creator()
     vdjtools_convert()
